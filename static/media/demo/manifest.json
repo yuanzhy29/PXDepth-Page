@@ -1,0 +1,509 @@
+{
+  "preserves_original_ply": true,
+  "scenes": [
+    {
+      "id": "chair_01",
+      "image": "chair_01/image.jpg",
+      "methods": {
+        "DA-V2": {
+          "bytes": 8103390,
+          "preserved": true,
+          "vertices": 540214
+        },
+        "InfiniDepth": {
+          "bytes": 8300385,
+          "preserved": true,
+          "vertices": 553347
+        },
+        "MDA": {
+          "bytes": 8253420,
+          "preserved": true,
+          "vertices": 550216
+        },
+        "MoGe2": {
+          "bytes": 8132265,
+          "preserved": true,
+          "vertices": 542139
+        },
+        "Ours": {
+          "bytes": 8340030,
+          "preserved": true,
+          "vertices": 555990
+        },
+        "PPD": {
+          "bytes": 8346990,
+          "preserved": true,
+          "vertices": 556454
+        }
+      }
+    },
+    {
+      "id": "courtyard_01",
+      "image": "courtyard_01/image.jpg",
+      "methods": {
+        "DA-V2": {
+          "bytes": 4119510,
+          "preserved": true,
+          "vertices": 274622
+        },
+        "InfiniDepth": {
+          "bytes": 4156095,
+          "preserved": true,
+          "vertices": 277061
+        },
+        "MDA": {
+          "bytes": 2892540,
+          "preserved": true,
+          "vertices": 192824
+        },
+        "MoGe2": {
+          "bytes": 2932245,
+          "preserved": true,
+          "vertices": 195471
+        },
+        "Ours": {
+          "bytes": 2929365,
+          "preserved": true,
+          "vertices": 195279
+        },
+        "PPD": {
+          "bytes": 2972040,
+          "preserved": true,
+          "vertices": 198124
+        }
+      }
+    },
+    {
+      "id": "courtyard_02",
+      "image": "courtyard_02/image.jpg",
+      "methods": {
+        "DA-V2": {
+          "bytes": 2819025,
+          "preserved": true,
+          "vertices": 187923
+        },
+        "InfiniDepth": {
+          "bytes": 2877630,
+          "preserved": true,
+          "vertices": 191830
+        },
+        "MDA": {
+          "bytes": 2758095,
+          "preserved": true,
+          "vertices": 183861
+        },
+        "MoGe2": {
+          "bytes": 2791920,
+          "preserved": true,
+          "vertices": 186116
+        },
+        "Ours": {
+          "bytes": 2814420,
+          "preserved": true,
+          "vertices": 187616
+        },
+        "PPD": {
+          "bytes": 2855970,
+          "preserved": true,
+          "vertices": 190386
+        }
+      }
+    },
+    {
+      "id": "Library_01",
+      "image": "Library_01/image.jpg",
+      "methods": {
+        "DA-V2": {
+          "bytes": 4556955,
+          "preserved": true,
+          "vertices": 303785
+        },
+        "InfiniDepth": {
+          "bytes": 4565340,
+          "preserved": true,
+          "vertices": 304344
+        },
+        "MDA": {
+          "bytes": 4566075,
+          "preserved": true,
+          "vertices": 304393
+        },
+        "MoGe2": {
+          "bytes": 4555650,
+          "preserved": true,
+          "vertices": 303698
+        },
+        "Ours": {
+          "bytes": 4569540,
+          "preserved": true,
+          "vertices": 304624
+        },
+        "PPD": {
+          "bytes": 4568895,
+          "preserved": true,
+          "vertices": 304581
+        }
+      }
+    },
+    {
+      "id": "pipe_01",
+      "image": "pipe_01/image.jpg",
+      "methods": {
+        "DA-V2": {
+          "bytes": 10170705,
+          "preserved": true,
+          "vertices": 678035
+        },
+        "InfiniDepth": {
+          "bytes": 10253520,
+          "preserved": true,
+          "vertices": 683556
+        },
+        "MDA": {
+          "bytes": 9814515,
+          "preserved": true,
+          "vertices": 654289
+        },
+        "MoGe2": {
+          "bytes": 10185285,
+          "preserved": true,
+          "vertices": 679007
+        },
+        "Ours": {
+          "bytes": 9963030,
+          "preserved": true,
+          "vertices": 664190
+        },
+        "PPD": {
+          "bytes": 10230405,
+          "preserved": true,
+          "vertices": 682015
+        }
+      }
+    },
+    {
+      "id": "room_01",
+      "image": "room_01/image.jpg",
+      "methods": {
+        "DA-V2": {
+          "bytes": 10368525,
+          "preserved": true,
+          "vertices": 691223
+        },
+        "InfiniDepth": {
+          "bytes": 10436790,
+          "preserved": true,
+          "vertices": 695774
+        },
+        "MDA": {
+          "bytes": 10452465,
+          "preserved": true,
+          "vertices": 696819
+        },
+        "MoGe2": {
+          "bytes": 10363470,
+          "preserved": true,
+          "vertices": 690886
+        },
+        "Ours": {
+          "bytes": 10451700,
+          "preserved": true,
+          "vertices": 696768
+        },
+        "PPD": {
+          "bytes": 10418370,
+          "preserved": true,
+          "vertices": 694546
+        }
+      }
+    },
+    {
+      "id": "room_02",
+      "image": "room_02/image.jpg",
+      "methods": {
+        "DA-V2": {
+          "bytes": 10457580,
+          "preserved": true,
+          "vertices": 697160
+        },
+        "InfiniDepth": {
+          "bytes": 10471245,
+          "preserved": true,
+          "vertices": 698071
+        },
+        "MDA": {
+          "bytes": 10486095,
+          "preserved": true,
+          "vertices": 699061
+        },
+        "MoGe2": {
+          "bytes": 10455495,
+          "preserved": true,
+          "vertices": 697021
+        },
+        "Ours": {
+          "bytes": 10477290,
+          "preserved": true,
+          "vertices": 698474
+        },
+        "PPD": {
+          "bytes": 10477335,
+          "preserved": true,
+          "vertices": 698477
+        }
+      }
+    },
+    {
+      "id": "room_03",
+      "image": "room_03/image.jpg",
+      "methods": {
+        "DA-V2": {
+          "bytes": 10188180,
+          "preserved": true,
+          "vertices": 679200
+        },
+        "InfiniDepth": {
+          "bytes": 10212840,
+          "preserved": true,
+          "vertices": 680844
+        },
+        "MDA": {
+          "bytes": 10073595,
+          "preserved": true,
+          "vertices": 671561
+        },
+        "MoGe2": {
+          "bytes": 10209675,
+          "preserved": true,
+          "vertices": 680633
+        },
+        "Ours": {
+          "bytes": 10209270,
+          "preserved": true,
+          "vertices": 680606
+        },
+        "PPD": {
+          "bytes": 10260105,
+          "preserved": true,
+          "vertices": 683995
+        }
+      }
+    },
+    {
+      "id": "stair_01",
+      "image": "stair_01/image.jpg",
+      "methods": {
+        "DA-V2": {
+          "bytes": 1759620,
+          "preserved": true,
+          "vertices": 117296
+        },
+        "InfiniDepth": {
+          "bytes": 1795425,
+          "preserved": true,
+          "vertices": 119683
+        },
+        "MDA": {
+          "bytes": 1762320,
+          "preserved": true,
+          "vertices": 117476
+        },
+        "MoGe2": {
+          "bytes": 1755945,
+          "preserved": true,
+          "vertices": 117051
+        },
+        "Ours": {
+          "bytes": 1807935,
+          "preserved": true,
+          "vertices": 120517
+        },
+        "PPD": {
+          "bytes": 1805325,
+          "preserved": true,
+          "vertices": 120343
+        }
+      }
+    },
+    {
+      "id": "street_01",
+      "image": "street_01/image.jpg",
+      "methods": {
+        "DA-V2": {
+          "bytes": 16567201,
+          "preserved": true,
+          "vertices": 1104468
+        },
+        "InfiniDepth": {
+          "bytes": 16773271,
+          "preserved": true,
+          "vertices": 1118206
+        },
+        "MDA": {
+          "bytes": 10364475,
+          "preserved": true,
+          "vertices": 690953
+        },
+        "MoGe2": {
+          "bytes": 16251556,
+          "preserved": true,
+          "vertices": 1083425
+        },
+        "Ours": {
+          "bytes": 16303021,
+          "preserved": true,
+          "vertices": 1086856
+        },
+        "PPD": {
+          "bytes": 15461206,
+          "preserved": true,
+          "vertices": 1030735
+        }
+      }
+    },
+    {
+      "id": "street_02",
+      "image": "street_02/image.jpg",
+      "methods": {
+        "DA-V2": {
+          "bytes": 23891236,
+          "preserved": true,
+          "vertices": 1592737
+        },
+        "InfiniDepth": {
+          "bytes": 22913161,
+          "preserved": true,
+          "vertices": 1527532
+        },
+        "MDA": {
+          "bytes": 7091100,
+          "preserved": true,
+          "vertices": 472728
+        },
+        "MoGe2": {
+          "bytes": 23126026,
+          "preserved": true,
+          "vertices": 1541723
+        },
+        "Ours": {
+          "bytes": 23519881,
+          "preserved": true,
+          "vertices": 1567980
+        },
+        "PPD": {
+          "bytes": 24589156,
+          "preserved": true,
+          "vertices": 1639265
+        }
+      }
+    },
+    {
+      "id": "street_03",
+      "image": "street_03/image.jpg",
+      "methods": {
+        "DA-V2": {
+          "bytes": 3876540,
+          "preserved": true,
+          "vertices": 258424
+        },
+        "InfiniDepth": {
+          "bytes": 3850440,
+          "preserved": true,
+          "vertices": 256684
+        },
+        "MDA": {
+          "bytes": 3887790,
+          "preserved": true,
+          "vertices": 259174
+        },
+        "MoGe2": {
+          "bytes": 3861975,
+          "preserved": true,
+          "vertices": 257453
+        },
+        "Ours": {
+          "bytes": 3884355,
+          "preserved": true,
+          "vertices": 258945
+        },
+        "PPD": {
+          "bytes": 3885375,
+          "preserved": true,
+          "vertices": 259013
+        }
+      }
+    },
+    {
+      "id": "umic_building",
+      "image": "umic_building/image.jpg",
+      "methods": {
+        "DA-V2": {
+          "bytes": 26179411,
+          "preserved": true,
+          "vertices": 1745282
+        },
+        "InfiniDepth": {
+          "bytes": 25238686,
+          "preserved": true,
+          "vertices": 1682567
+        },
+        "MDA": {
+          "bytes": 10528845,
+          "preserved": true,
+          "vertices": 701911
+        },
+        "MoGe2": {
+          "bytes": 25663111,
+          "preserved": true,
+          "vertices": 1710862
+        },
+        "Ours": {
+          "bytes": 26107396,
+          "preserved": true,
+          "vertices": 1740481
+        },
+        "PPD": {
+          "bytes": 26009056,
+          "preserved": true,
+          "vertices": 1733925
+        }
+      }
+    },
+    {
+      "id": "volterra",
+      "image": "volterra/image.jpg",
+      "methods": {
+        "DA-V2": {
+          "bytes": 9886230,
+          "preserved": true,
+          "vertices": 659070
+        },
+        "InfiniDepth": {
+          "bytes": 9959580,
+          "preserved": true,
+          "vertices": 663960
+        },
+        "MDA": {
+          "bytes": 8315670,
+          "preserved": true,
+          "vertices": 554366
+        },
+        "MoGe2": {
+          "bytes": 9995865,
+          "preserved": true,
+          "vertices": 666379
+        },
+        "Ours": {
+          "bytes": 10000965,
+          "preserved": true,
+          "vertices": 666719
+        },
+        "PPD": {
+          "bytes": 9937710,
+          "preserved": true,
+          "vertices": 662502
+        }
+      }
+    }
+  ]
+}

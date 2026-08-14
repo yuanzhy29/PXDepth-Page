@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f4f7fa" />
+    <script>
+      if ("scrollRestoration" in history) {
+        history.scrollRestoration = "manual";
+      }
+
+      function resetPageScroll() {
+        window.scrollTo(0, 0);
+        window.requestAnimationFrame(function () {
+          window.scrollTo(0, 0);
+        });
+        window.setTimeout(function () {
+          window.scrollTo(0, 0);
+        }, 80);
+      }
+
+      window.addEventListener("pageshow", function () {
+        var navigation = performance.getEntriesByType("navigation")[0];
+        if (!navigation || navigation.type === "navigate" || navigation.type === "reload") {
+          resetPageScroll();
+        }
+      });
+    </script>
+
+    <!-- EDIT: update these fields for each project. -->
+    <title>PXDepth: Pixel-Space Modeling for Structure Preserving Monocular Depth Estimation</title>
+    <meta
+      name="description"
+      content="PXDepth combines global context encoding with pixel-space depth prediction to preserve fine geometry in monocular depth estimation."
+    />
+    <meta
+      name="citation_title"
+      content="PXDepth: Pixel-Space Modeling for Structure Preserving Monocular Depth Estimation"
+    />
+    <meta name="citation_publication_date" content="2027" />
+    <meta name="citation_author" content="Zhiyuan Yuan" />
+    <meta name="citation_author" content="Guanying Chen" />
+    <meta name="citation_author" content="Lingteng Qiu" />
+    <meta name="citation_author" content="Ruimao Zhang" />
+    <meta name="citation_author" content="Shuguang Cui" />
+    <meta name="citation_author" content="Xiaochun Cao" />
+
+    <!-- EDIT: replace USERNAME and REPOSITORY after creating the GitHub Pages repository. -->
+    <link
+      rel="canonical"
+      href="https://yuanzhy29.github.io/PXDepth-Page/"
+    />
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:title"
+      content="PXDepth: Pixel-Space Modeling for Structure Preserving Monocular Depth Estimation"
+    />
+    <meta
+      property="og:description"
+      content="Global context. Pixel-space prediction. Structure preserved."
+    />
+    <meta
+      property="og:url"
+      content="https://yuanzhy29.github.io/PXDepth-Page/"
+    />
+    <meta
+      property="og:image"
+      content="https://yuanzhy29.github.io/PXDepth-Page/static/media/pixdepth/hero.webp"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:image"
+      content="https://yuanzhy29.github.io/PXDepth-Page/static/media/pixdepth/hero.webp"
+    />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&amp;family=Noto+Sans:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link rel="icon" href="static/media/favicon.svg?v=20260814-2" type="image/svg+xml" />
+    <link rel="icon" href="static/media/favicon.png?v=20260814-2" type="image/png" sizes="96x96" />
+    <link rel="stylesheet" href="static/css/style.css" />
+    <script src="static/js/main.js" defer></script>
+    <script src="static/js/pointcloud-demo.js?v=20260813-1" defer></script>
+  </head>
+
+  <body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
+
+    <main id="main-content">
+      <div class="page-glow glow-a" aria-hidden="true"></div>
+      <div class="page-glow glow-b" aria-hidden="true"></div>
+
+      <nav class="rail" aria-label="PXDepth section navigation">
+        <a class="rail-link is-active" data-nav-link href="#top" aria-current="location">
+          <span class="rail-dot" aria-hidden="true"></span>
+          <span class="rail-label">Top</span>
+        </a>
+        <a class="rail-link" data-nav-link href="#visualization">
+          <span class="rail-dot" aria-hidden="true"></span>
+          <span class="rail-label">Qualitative Visualization</span>
+        </a>
+        <a class="rail-link" data-nav-link href="#overview">
+          <span class="rail-dot" aria-hidden="true"></span>
+          <span class="rail-label">Overview</span>
+        </a>
+        <a class="rail-link" data-nav-link href="#why-pixel-space">
+          <span class="rail-dot" aria-hidden="true"></span>
+          <span class="rail-label">Architecture Comparison</span>
+        </a>
+        <a class="rail-link" data-nav-link href="#qualitative-comparison">
+          <span class="rail-dot" aria-hidden="true"></span>
+          <span class="rail-label">Qualitative Comparison</span>
+        </a>
+        <a class="rail-link" data-nav-link href="#benchmarks">
+          <span class="rail-dot" aria-hidden="true"></span>
+          <span class="rail-label">Quantitative Comparison</span>
+        </a>
+        <a class="rail-link" data-nav-link href="#citation">
+          <span class="rail-dot" aria-hidden="true"></span>
+          <span class="rail-label">BibTeX</span>
+        </a>
+      </nav>
+
+      <nav class="mobile-nav" aria-label="PXDepth mobile navigation">
+        <a class="mobile-brand" href="#top">PXDepth</a>
+        <div class="mobile-links">
+          <a data-nav-link href="#visualization">Visualization</a>
+          <a data-nav-link href="#overview">Overview</a>
+          <a data-nav-link href="#why-pixel-space">Architectures</a>
+          <a data-nav-link href="#qualitative-comparison">Qualitative</a>
+          <a data-nav-link href="#benchmarks">Quantitative</a>
+          <a data-nav-link href="#citation">Citation</a>
+        </div>
+      </nav>
+
+      <!-- HERO: edit the title, authors, affiliations, and resource links here. -->
+      <section class="hero" id="top" data-section>
+        <div class="hero-copy">
+          <h1>
+            <span class="title-brand">PXDepth:</span>
+            <span class="title-pixel-space">Pixel-Space Modeling</span> for
+            <span class="title-structure">Structure Preserving</span> Monocular
+            Depth Estimation
+          </h1>
+
+          <div class="authors" aria-label="Authors">
+            <span>Zhiyuan Yuan<sup>1</sup></span>
+            <span>Guanying Chen<sup>1*</sup></span>
+            <span>Lingteng Qiu<sup>3</sup></span>
+            <span>Ruimao Zhang<sup>1</sup></span>
+            <span>Shuguang Cui<sup>3,2</sup></span>
+            <span>Xiaochun Cao<sup>1</sup></span>
+          </div>
+          <p class="affiliations">
+            <span><sup>1</sup>Sun Yat-sen University</span>
+            <span><sup>2</sup>Shenzhen-FNii</span>
+            <span><sup>3</sup>CUHKSZ</span>
+          </p>
+          <p class="corresponding-author">
+            <sup>*</sup>Corresponding author:
+            <a href="mailto:chenguanying@mail.sysu.edu.cn">chenguanying@mail.sysu.edu.cn</a>
+          </p>
+
+          <div class="actions" aria-label="Project resources">
+            <!-- Replace a disabled item with an anchor when its URL is public. -->
+            <!-- Example: <a class="action" href="https://arxiv.org/">Paper <span aria-hidden="true">↗</span></a> -->
+            <span class="action is-disabled" aria-label="Paper: Coming soon">
+              Paper <small>Coming soon</small>
+            </span>
+            <span class="action is-disabled" aria-label="Code: Coming soon">
+              Code <small>Coming soon</small>
+            </span>
+            <span class="action is-disabled" aria-label="Demo: Coming soon">
+              Demo <small>Coming soon</small>
+            </span>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- DEMO VIDEO -->
+      <section class="demo-showcase" aria-label="PXDepth demo">
+        <div class="content">
+          <div class="demo-video-frame">
+            <video autoplay controls muted loop playsinline preload="auto">
+              <source src="static/media/pixdepth/demo.mp4?v=20260814-2" type="video/mp4" />
+              Your browser does not support the HTML video element.
+            </video>
+          </div>
+          <div class="tldr" role="note" aria-label="PXDepth summary">
+            <p>
+              <strong>TL;DR:</strong> Large-patch ViTs capture global context,
+              but coarse tokenization weakens pixel-level cues that convolutional
+              upsampling may not fully recover. <span>PXDepth</span> separates
+              global context encoding from pixel-space depth prediction, using a
+              <span>Global Context Encoder</span> and a
+              <span>Pixel-Space Depth Predictor</span> with CM-PiT blocks and a
+              coarse-to-fine cascade. It better preserves structural details than
+              strong discriminative baselines while remaining more efficient than
+              multi-step generative methods.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- QUALITATIVE VISUALIZATION -->
+      <section class="section reveal" id="visualization" data-section>
+        <div class="content content-wide">
+          <header class="section-head">
+            <h2>Qualitative Visualization</h2>
+          </header>
+
+          <div class="pointcloud-demo" data-pointcloud-demo>
+            <div class="pointcloud-toolbar">
+              <div class="pointcloud-scene-title">
+                <span class="pointcloud-kicker">Interactive point clouds</span>
+              </div>
+              <button class="pointcloud-reset" type="button" data-reset-view>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4.9 8.1A8 8 0 1 1 4 14m.9-5.9V3.9M4.9 8.1h4.2" />
+                </svg>
+                Reset view
+              </button>
+            </div>
+
+            <div class="pointcloud-grid">
+              <article class="pointcloud-panel">
+                <header class="pointcloud-panel-head">
+                  <div class="pointcloud-method pointcloud-method-ours">
+                    <span>PXDepth</span>
+                    <small>Ours</small>
+                  </div>
+                  <button
+                    class="pointcloud-adjust"
+                    type="button"
+                    data-adjust-view="ours"
+                    aria-label="Adjust the PXDepth view independently"
+                    aria-pressed="false"
+                  >
+                    Adjust
+                  </button>
+                </header>
+                <div class="pointcloud-viewport" data-state="loading">
+                  <canvas
+                    class="pointcloud-canvas"
+                    data-viewer="ours"
+                    tabindex="0"
+                    aria-label="Interactive PXDepth point cloud. Drag to rotate, use the wheel to zoom, Shift-drag or right-drag to pan, and double-click a point to change the rotation center."
+                  ></canvas>
+                  <span
+                    class="pointcloud-focus-marker"
+                    data-focus-marker
+                    aria-hidden="true"
+                  ></span>
+                  <div class="pointcloud-viewer-state" aria-live="polite">
+                    <span class="pointcloud-spinner" aria-hidden="true"></span>
+                    <span data-viewer-status>Loading PXDepth</span>
+                    <div
+                      class="pointcloud-progress-track is-indeterminate"
+                      data-viewer-progress-bar
+                      role="progressbar"
+                      aria-label="PXDepth point-cloud loading progress"
+                      aria-valuemin="0"
+                      aria-valuemax="100"
+                    >
+                      <span data-viewer-progress-fill></span>
+                    </div>
+                    <small data-viewer-progress></small>
+                  </div>
+                  <div class="pointcloud-drag-cue" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                      <path d="M9.2 11V7.4a1.8 1.8 0 0 1 3.6 0v3.1-1.7a1.5 1.5 0 0 1 3 0v2-1.1a1.5 1.5 0 0 1 3 0v4.1c0 4.3-2.5 7.2-6.6 7.2h-.5c-2 0-3.4-.7-4.7-2.1l-3.3-3.5a1.6 1.6 0 0 1 2.2-2.3L9.2 16V11Z" />
+                    </svg>
+                    Drag to explore
+                  </div>
+                </div>
+              </article>
+
+              <article class="pointcloud-panel">
+                <header class="pointcloud-panel-head">
+                  <div class="pointcloud-method-picker" data-method-picker>
+                    <button
+                      class="pointcloud-method-trigger"
+                      type="button"
+                      data-method-trigger
+                      aria-label="Choose comparison method"
+                      aria-haspopup="listbox"
+                      aria-expanded="false"
+                    >
+                      <span data-method-label>MoGe-2</span>
+                      <svg viewBox="0 0 16 16" aria-hidden="true">
+                        <path d="m4 6 4 4 4-4" />
+                      </svg>
+                    </button>
+                    <small>Baseline</small>
+                    <div
+                      class="pointcloud-method-menu"
+                      data-method-menu
+                      role="listbox"
+                      aria-label="Comparison methods"
+                      hidden
+                    ></div>
+                  </div>
+                  <button
+                    class="pointcloud-adjust"
+                    type="button"
+                    data-adjust-view="baseline"
+                    aria-label="Adjust the baseline view independently"
+                    aria-pressed="false"
+                  >
+                    Adjust
+                  </button>
+                </header>
+                <div class="pointcloud-viewport" data-state="loading">
+                  <canvas
+                    class="pointcloud-canvas"
+                    data-viewer="baseline"
+                    tabindex="0"
+                    aria-label="Interactive baseline point cloud. Drag to rotate, use the wheel to zoom, Shift-drag or right-drag to pan, and double-click a point to change the rotation center."
+                  ></canvas>
+                  <span
+                    class="pointcloud-focus-marker"
+                    data-focus-marker
+                    aria-hidden="true"
+                  ></span>
+                  <div class="pointcloud-viewer-state" aria-live="polite">
+                    <span class="pointcloud-spinner" aria-hidden="true"></span>
+                    <span data-viewer-status>Loading baseline</span>
+                    <div
+                      class="pointcloud-progress-track is-indeterminate"
+                      data-viewer-progress-bar
+                      role="progressbar"
+                      aria-label="Baseline point-cloud loading progress"
+                      aria-valuemin="0"
+                      aria-valuemax="100"
+                    >
+                      <span data-viewer-progress-fill></span>
+                    </div>
+                    <small data-viewer-progress></small>
+                  </div>
+                  <div class="pointcloud-drag-cue" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                      <path d="M9.2 11V7.4a1.8 1.8 0 0 1 3.6 0v3.1-1.7a1.5 1.5 0 0 1 3 0v2-1.1a1.5 1.5 0 0 1 3 0v4.1c0 4.3-2.5 7.2-6.6 7.2h-.5c-2 0-3.4-.7-4.7-2.1l-3.3-3.5a1.6 1.6 0 0 1 2.2-2.3L9.2 16V11Z" />
+                    </svg>
+                    Drag to explore
+                  </div>
+                </div>
+              </article>
+            </div>
+
+            <div class="pointcloud-controls" aria-label="Point-cloud controls">
+              <span><b>Rotate</b> left drag</span>
+              <span><b>Zoom</b> wheel or pinch</span>
+              <span><b>Pan</b> right drag or Shift-drag</span>
+              <span><b>Focus</b> double click</span>
+              <span><b>Adjust</b> align one view, then Done</span>
+              <span><b>Reset</b> R or button</span>
+            </div>
+
+            <div class="scene-browser">
+              <div class="scene-browser-head">
+                <div class="scene-browser-heading">
+                  <strong>Choose a scene</strong>
+                  <span class="scene-browser-current">
+                    <b data-scene-name>Street II</b>
+                    <span data-scene-counter>11 / 14</span>
+                  </span>
+                </div>
+                <span class="scene-browser-hint">Hover for a larger RGB preview</span>
+              </div>
+              <div
+                class="scene-strip"
+                data-scene-strip
+                role="listbox"
+                aria-label="Point-cloud scenes"
+              ></div>
+            </div>
+
+            <div
+              class="scene-hover-preview"
+              data-scene-preview
+              aria-hidden="true"
+            >
+              <img src="" alt="" />
+            </div>
+
+            <noscript>
+              <p class="pointcloud-noscript">
+                Enable JavaScript to use the interactive point-cloud comparison.
+              </p>
+            </noscript>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- OVERVIEW -->
+      <section class="section reveal" id="overview" data-section>
+        <div class="content">
+          <header class="section-head">
+            <h2>Overview</h2>
+          </header>
+
+          <!-- OVERVIEW TEXT: Add one or more <p>...</p> elements inside this div. -->
+          <div class="overview-copy"></div>
+
+          <figure class="diagram teaser-diagram">
+            <img
+              src="static/media/pixdepth/hero.webp"
+              alt="PXDepth teaser comparing indoor, outdoor, and wild-scene point clouds alongside global accuracy, boundary CD, and latency results."
+              width="2697"
+              height="1862"
+              loading="lazy"
+            />
+          </figure>
+
+        </div>
+      </section>
+
+      <!-- ARCHITECTURE COMPARISON -->
+      <section class="section reveal" id="why-pixel-space" data-section>
+        <div class="content">
+          <header class="section-head">
+            <h2>Comparison To Existing Architecture</h2>
+          </header>
+
+          <figure class="diagram architecture-diagram">
+            <img
+              src="static/media/pixdepth/architecture.webp"
+              alt="Comparison of convolutional decoding, multi-step diffusion decoding, and PXDepth pixel-space prediction."
+              width="2600"
+              height="604"
+              loading="lazy"
+            />
+            <div class="architecture-labels" aria-label="Compared architectures">
+              <span><b>(a)</b> Discriminative Architecture</span>
+              <span><b>(b)</b> PPD</span>
+              <span><b>(c)</b> Ours</span>
+            </div>
+          </figure>
+
+          <div class="motivation-note" role="note" aria-label="Architecture comparison summary">
+            <div class="architecture-analysis">
+              <p>
+                <strong>Discriminative models.</strong> A large-patch ViT captures
+                global context, while a convolutional decoder upsamples its
+                low-resolution features in a single feed-forward pass. This is
+                efficient, but coarse tokenization weakens high-frequency cues that
+                upsampling may not fully recover, leading to distorted local structures.
+              </p>
+              <p>
+                <strong>PPD.</strong> Pixel-space diffusion, semantic guidance, and
+                a cascaded DiT preserve high-frequency information and improve fine
+                structures. However, multi-step denoising repeatedly evaluates the
+                network, resulting in high latency.
+              </p>
+              <p>
+                <strong>PXDepth.</strong> A Global Context Encoder supplies
+                scene-level geometry, while a CM-PiT-based Pixel-Space Depth
+                Predictor maintains pixel-space features with coarse-to-fine
+                compaction. This single-pass design preserves local structure while
+                maintaining low latency.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- QUALITATIVE COMPARISON -->
+      <section
+        class="section section-tint reveal"
+        id="qualitative-comparison"
+        data-section
+      >
+        <div class="content content-wide">
+          <header class="section-head">
+            <h2>Qualitative Comparison</h2>
+          </header>
+          <figure class="media-panel result-figure">
+            <div class="media-canvas result-media-canvas">
+              <img
+                src="static/media/pixdepth/results.webp"
+                alt="Qualitative point-cloud comparison between MoGe-2, MDA, PPD, InfiniDepth, and PXDepth across indoor and outdoor scenes."
+                width="2600"
+                height="1620"
+                loading="lazy"
+              />
+              <div class="result-image-labels" aria-label="Compared methods">
+                <span>Image</span>
+                <span>MoGe-2</span>
+                <span>MDA</span>
+                <span>PPD</span>
+                <span>InfiniDepth</span>
+                <span>Ours</span>
+              </div>
+            </div>
+          </figure>
+        </div>
+      </section>
+
+      <!-- QUANTITATIVE COMPARISON -->
+      <section class="section section-tint reveal" id="benchmarks" data-section>
+        <div class="content content-wide">
+          <header class="section-head">
+            <h2>Quantitative Comparison</h2>
+          </header>
+
+          <div class="benchmark-card">
+            <div class="table-shell" tabindex="0" aria-label="Benchmark results">
+              <table>
+              <thead>
+                <tr>
+                  <th class="table-left" scope="col" rowspan="2">Category</th>
+                  <th class="table-left" scope="col" rowspan="2">Method</th>
+                  <th scope="colgroup" colspan="2">MoGe Benchmark</th>
+                  <th scope="colgroup" colspan="3">MDA Benchmark</th>
+                  <th scope="col" rowspan="2">Latency ↓</th>
+                </tr>
+                <tr>
+                  <th scope="col">Rel ↓</th>
+                  <th scope="col">δ₁ ↑</th>
+                  <th scope="col">Rel ↓</th>
+                  <th scope="col">δ₁ ↑</th>
+                  <th class="edge-cd-col" scope="col">Edge CD ↓</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th class="category-cell" scope="rowgroup" rowspan="3">
+                    Global<br />Prediction
+                  </th>
+                  <th class="method-cell" scope="row">DA V2</th>
+                  <td>8.0</td>
+                  <td>93.0</td>
+                  <td>4.7</td>
+                  <td>96.5</td>
+                  <td class="edge-cd-col">112.8</td>
+                  <td>55.3</td>
+                </tr>
+                <tr>
+                  <th class="method-cell" scope="row">DepthPro</th>
+                  <td>6.7</td>
+                  <td>93.6</td>
+                  <td>3.9</td>
+                  <td><strong>97.0</strong></td>
+                  <td class="edge-cd-col">106.4</td>
+                  <td>206.8</td>
+                </tr>
+                <tr>
+                  <th class="method-cell" scope="row">MoGe-2</th>
+                  <td><strong>5.1</strong></td>
+                  <td><strong>95.6</strong></td>
+                  <td><strong>3.5</strong></td>
+                  <td>96.9</td>
+                  <td class="edge-cd-col"><strong>100.3</strong></td>
+                  <td><strong>32.9</strong></td>
+                </tr>
+                <tr class="group-start">
+                  <th class="category-cell" scope="rowgroup" rowspan="4">
+                    Structure<br />Aware
+                  </th>
+                  <th class="method-cell" scope="row">InfiniDepth</th>
+                  <td>7.2</td>
+                  <td>94.1</td>
+                  <td>4.7</td>
+                  <td>96.7</td>
+                  <td class="edge-cd-col">98.9</td>
+                  <td>65.7</td>
+                </tr>
+                <tr>
+                  <th class="method-cell" scope="row">PPD</th>
+                  <td>7.5</td>
+                  <td>92.6</td>
+                  <td>4.4</td>
+                  <td>96.5</td>
+                  <td class="edge-cd-col">93.7</td>
+                  <td>209.8</td>
+                </tr>
+                <tr>
+                  <th class="method-cell" scope="row">MDA</th>
+                  <td>8.2</td>
+                  <td>90.5</td>
+                  <td><strong>3.6</strong></td>
+                  <td>96.7</td>
+                  <td class="edge-cd-col">72.8</td>
+                  <td>267.1</td>
+                </tr>
+                <tr class="is-ours">
+                  <th class="method-cell" scope="row">
+                    <span>PXDepth</span>
+                  </th>
+                  <td><strong>5.8</strong></td>
+                  <td><strong>94.8</strong></td>
+                  <td><strong>3.6</strong></td>
+                  <td><strong>97.0</strong></td>
+                  <td class="edge-cd-col"><strong>70.6</strong></td>
+                  <td><strong>56.4</strong></td>
+                </tr>
+              </tbody>
+              </table>
+            </div>
+            <p class="table-note">
+              All reported values are averages. Rel and δ₁ measure global depth
+              accuracy, while Edge CD measures boundary sharpness. Edge CD is
+              reported in millimeters (mm). Latency is measured per image at
+              518 × 518 on an RTX 5880 GPU and reported in milliseconds (ms).
+            </p>
+          </div>
+          <p class="quantitative-summary">
+            PXDepth preserves better local structure without sacrificing global accuracy, while running faster than existing structure-aware methods.
+          </p>
+        </div>
+      </section>
+
+      <!-- CITATION: replace the release note with the commented BibTeX block after publication. -->
+      <section class="section citation-section reveal" id="citation" data-section>
+        <div class="content">
+          <header class="section-head">
+            <h2>BibTeX</h2>
+          </header>
+
+          <div class="release-note">
+            <span class="release-dot" aria-hidden="true"></span>
+            <p>
+              Paper, code, and citation will be released after review.
+            </p>
+          </div>
+
+          <!--
+          <div class="citation">
+            <button
+              class="copy-button"
+              type="button"
+              data-copy-target="bibtex"
+            >
+              Copy BibTeX
+            </button>
+            <pre><code id="bibtex">@article{pxdepth2027,
+  title={PXDepth: Pixel-Space Modeling for Structure Preserving Monocular Depth Estimation},
+  author={Yuan, Zhiyuan and Chen, Guanying and Qiu, Lingteng and Zhang, Ruimao and Cui, Shuguang and Cao, Xiaochun},
+  year={2027}
+}</code></pre>
+          </div>
+          -->
+        </div>
+      </section>
+
+      <footer>
+        <p>
+          PXDepth research preview · Static project-page template inspired by
+          <a
+            href="https://github.com/eliahuhorwitz/Academic-project-page-template"
+          >
+            Academic Project Page Template
+          </a>
+        </p>
+        <a href="#top">Back to top ↑</a>
+      </footer>
+    </main>
+  </body>
+</html>
