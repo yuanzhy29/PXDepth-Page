@@ -44,6 +44,49 @@
     });
   }
 
+  function loadLazyVideo(video) {
+    if (video.getAttribute("data-loaded") === "true") return;
+    video.setAttribute("data-loaded", "true");
+
+    video.querySelectorAll("source[data-src]").forEach(function (source) {
+      source.src = source.getAttribute("data-src");
+      source.removeAttribute("data-src");
+    });
+
+    video.load();
+    if (video.hasAttribute("autoplay")) {
+      var playAttempt = video.play();
+      if (playAttempt && typeof playAttempt.catch === "function") {
+        playAttempt.catch(function () {
+          // Native controls remain available when autoplay is restricted.
+        });
+      }
+    }
+  }
+
+  document.querySelectorAll("[data-lazy-video]").forEach(function (video) {
+    if (!("IntersectionObserver" in window)) {
+      loadLazyVideo(video);
+      return;
+    }
+
+    var videoObserver = new IntersectionObserver(
+      function (entries) {
+        if (!entries.some(function (entry) { return entry.isIntersecting; })) {
+          return;
+        }
+        videoObserver.disconnect();
+        loadLazyVideo(video);
+      },
+      {
+        rootMargin: "160px 0px",
+        threshold: 0.01,
+      },
+    );
+
+    videoObserver.observe(video);
+  });
+
   document.querySelectorAll("[data-copy-target]").forEach(function (button) {
     button.addEventListener("click", async function () {
       var targetId = button.getAttribute("data-copy-target");

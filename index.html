@@ -97,8 +97,8 @@
     <link rel="icon" href="static/media/favicon.svg?v=20260814-2" type="image/svg+xml" />
     <link rel="icon" href="static/media/favicon.png?v=20260814-2" type="image/png" sizes="96x96" />
     <link rel="stylesheet" href="static/css/style.css" />
-    <script src="static/js/main.js" defer></script>
-    <script src="static/js/pointcloud-demo.js?v=20260814-1" defer></script>
+    <script src="static/js/main.js?v=20260815-1" defer></script>
+    <script src="static/js/pointcloud-demo.js?v=20260815-1" defer></script>
   </head>
 
   <body>
@@ -200,8 +200,19 @@
       <section class="demo-showcase" aria-label="PXDepth demo">
         <div class="content">
           <div class="demo-video-frame">
-            <video autoplay controls muted loop playsinline preload="auto">
-              <source src="static/media/pixdepth/demo.mp4?v=20260814-2" type="video/mp4" />
+            <video
+              autoplay
+              controls
+              muted
+              loop
+              playsinline
+              preload="none"
+              data-lazy-video
+            >
+              <source
+                data-src="static/media/pixdepth/demo.mp4?v=20260814-2"
+                type="video/mp4"
+              />
               Your browser does not support the HTML video element.
             </video>
           </div>
@@ -258,7 +269,7 @@
                     Adjust
                   </button>
                 </header>
-                <div class="pointcloud-viewport" data-state="loading">
+                <div class="pointcloud-viewport" data-state="idle">
                   <canvas
                     class="pointcloud-canvas"
                     data-viewer="ours"
@@ -272,7 +283,7 @@
                   ></span>
                   <div class="pointcloud-viewer-state" aria-live="polite">
                     <span class="pointcloud-spinner" aria-hidden="true"></span>
-                    <span data-viewer-status>Loading PXDepth</span>
+                    <span data-viewer-status>Loads when this section is visible</span>
                     <div
                       class="pointcloud-progress-track is-indeterminate"
                       data-viewer-progress-bar
@@ -329,7 +340,7 @@
                     Adjust
                   </button>
                 </header>
-                <div class="pointcloud-viewport" data-state="loading">
+                <div class="pointcloud-viewport" data-state="idle">
                   <canvas
                     class="pointcloud-canvas"
                     data-viewer="baseline"
@@ -343,7 +354,7 @@
                   ></span>
                   <div class="pointcloud-viewer-state" aria-live="polite">
                     <span class="pointcloud-spinner" aria-hidden="true"></span>
-                    <span data-viewer-status>Loading baseline</span>
+                    <span data-viewer-status>Loads when this section is visible</span>
                     <div
                       class="pointcloud-progress-track is-indeterminate"
                       data-viewer-progress-bar

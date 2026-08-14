@@ -1151,9 +1151,15 @@ a.action:focus-visible {
   cursor: grabbing;
 }
 
+.pointcloud-viewport[data-state="idle"] .pointcloud-canvas,
 .pointcloud-viewport[data-state="loading"] .pointcloud-canvas {
   filter: saturate(0.72) brightness(0.92);
   opacity: 0.48;
+}
+
+.pointcloud-viewport[data-state="idle"] .pointcloud-spinner,
+.pointcloud-viewport[data-state="idle"] .pointcloud-progress-track {
+  display: none;
 }
 
 .pointcloud-focus-marker {
