@@ -1069,11 +1069,11 @@
         button.setAttribute("aria-selected", selected ? "true" : "false");
       });
       if (buttons[index]) {
-        buttons[index].scrollIntoView({
-          behavior: "smooth",
-          block: "nearest",
-          inline: "nearest",
-        });
+        var selectedButton = buttons[index];
+        var targetLeft =
+          selectedButton.offsetLeft -
+          (strip.clientWidth - selectedButton.offsetWidth) / 2;
+        strip.scrollLeft = Math.max(0, targetLeft);
       }
       hidePreview();
     };

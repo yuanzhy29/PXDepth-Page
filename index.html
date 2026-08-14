@@ -9,6 +9,17 @@
         history.scrollRestoration = "manual";
       }
 
+      function clearInitialFragment() {
+        if (!window.location.hash) return;
+        history.replaceState(
+          null,
+          "",
+          window.location.pathname + window.location.search,
+        );
+      }
+
+      clearInitialFragment();
+
       function resetPageScroll() {
         window.scrollTo(0, 0);
         window.requestAnimationFrame(function () {
@@ -19,12 +30,16 @@
         }, 80);
       }
 
-      window.addEventListener("pageshow", function () {
-        var navigation = performance.getEntriesByType("navigation")[0];
-        if (!navigation || navigation.type === "navigate" || navigation.type === "reload") {
-          resetPageScroll();
-        }
+      function resetInitialView() {
+        clearInitialFragment();
+        resetPageScroll();
+      }
+
+      document.addEventListener("DOMContentLoaded", resetInitialView, {
+        once: true,
       });
+      window.addEventListener("load", resetInitialView, { once: true });
+      window.addEventListener("pageshow", resetInitialView);
     </script>
 
     <!-- EDIT: update these fields for each project. -->
@@ -83,7 +98,7 @@
     <link rel="icon" href="static/media/favicon.png?v=20260814-2" type="image/png" sizes="96x96" />
     <link rel="stylesheet" href="static/css/style.css" />
     <script src="static/js/main.js" defer></script>
-    <script src="static/js/pointcloud-demo.js?v=20260813-1" defer></script>
+    <script src="static/js/pointcloud-demo.js?v=20260814-1" defer></script>
   </head>
 
   <body>
