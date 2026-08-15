@@ -335,6 +335,8 @@ a.action:focus-visible {
   box-shadow:
     var(--shadow-lg),
     inset 0 1px rgba(255, 255, 255, 0.9);
+  margin: 0 auto;
+  max-width: 760px;
   overflow: hidden;
   padding: 9px;
 }
@@ -420,7 +422,7 @@ a.action:focus-visible {
   border-radius: var(--radius);
   box-shadow: var(--shadow-sm);
   margin: 28px auto 0;
-  max-width: 1040px;
+  max-width: 760px;
   overflow: hidden;
   padding: 27px 32px 27px 40px;
   position: relative;
@@ -1622,15 +1624,23 @@ td {
   white-space: nowrap;
 }
 
-thead tr:first-child > th:first-child {
-  width: 15%;
+.benchmark-col-category {
+  width: 14%;
 }
 
-thead tr:first-child > th:nth-child(2) {
+.benchmark-col-method {
   width: 16%;
 }
 
-thead tr:first-child > th:last-child {
+.benchmark-col-metric {
+  width: 11%;
+}
+
+.benchmark-col-boundary {
+  width: 15%;
+}
+
+.benchmark-col-latency {
   width: 11%;
 }
 
@@ -1685,6 +1695,10 @@ tbody th {
 thead .edge-cd-col {
   background: rgba(0, 168, 145, 0.14);
   color: #177b70;
+  line-height: 1.2;
+  padding-left: 8px;
+  padding-right: 8px;
+  white-space: normal;
 }
 
 .group-start > * {

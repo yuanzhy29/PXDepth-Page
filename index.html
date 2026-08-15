@@ -162,12 +162,12 @@
           </h1>
 
           <div class="authors" aria-label="Authors">
-            <span>Zhiyuan Yuan<sup>1</sup></span>
-            <span>Guanying Chen<sup>1*</sup></span>
-            <span>Lingteng Qiu<sup>3</sup></span>
-            <span>Ruimao Zhang<sup>1</sup></span>
-            <span>Shuguang Cui<sup>3,2</sup></span>
-            <span>Xiaochun Cao<sup>1</sup></span>
+            <span><a href="https://github.com/yuanzhy29" target="_blank" rel="noreferrer">Zhiyuan Yuan<sup>1</sup></a></span>
+            <span><a href="https://guanyingc.github.io/" target="_blank" rel="noreferrer">Guanying Chen<sup>1*</sup></a></span>
+            <span><a href="https://lingtengqiu.github.io/" target="_blank" rel="noreferrer">Lingteng Qiu<sup>3</sup></a></span>
+            <span><a href="http://www.zhangruimao.site/" target="_blank" rel="noreferrer">Ruimao Zhang<sup>1</sup></a></span>
+            <span><a href="https://scholar.google.com.hk/citations?user=1o_qvR0AAAAJ&amp;hl=en" target="_blank" rel="noreferrer">Shuguang Cui<sup>3,2</sup></a></span>
+            <span><a href="https://scholar.google.com/citations?user=PDgp6OkAAAAJ&amp;hl=en" target="_blank" rel="noreferrer">Xiaochun Cao<sup>1</sup></a></span>
           </div>
           <p class="affiliations">
             <span><sup>1</sup>Sun Yat-sen University</span>
@@ -218,15 +218,10 @@
           </div>
           <div class="tldr" role="note" aria-label="PXDepth summary">
             <p>
-              <strong>TL;DR:</strong> Large-patch ViTs capture global context,
-              but coarse tokenization weakens pixel-level cues that convolutional
-              upsampling may not fully recover. <span>PXDepth</span> separates
-              global context encoding from pixel-space depth prediction, using a
+              <strong>TL;DR:</strong> PXDepth separates global context encoding
+              from pixel-space depth prediction, using a
               <span>Global Context Encoder</span> and a
-              <span>Pixel-Space Depth Predictor</span> with CM-PiT blocks and a
-              coarse-to-fine cascade. It better preserves structural details than
-              strong discriminative baselines while remaining more efficient than
-              multi-step generative methods.
+              <span>Pixel-Space Depth Predictor</span>.
             </p>
           </div>
         </div>
@@ -537,6 +532,13 @@
           <div class="benchmark-card">
             <div class="table-shell" tabindex="0" aria-label="Benchmark results">
               <table>
+              <colgroup>
+                <col class="benchmark-col-category" />
+                <col class="benchmark-col-method" />
+                <col class="benchmark-col-metric" span="4" />
+                <col class="benchmark-col-boundary" />
+                <col class="benchmark-col-latency" />
+              </colgroup>
               <thead>
                 <tr>
                   <th class="table-left" scope="col" rowspan="2">Category</th>
@@ -550,7 +552,7 @@
                   <th scope="col">δ₁ ↑</th>
                   <th scope="col">Rel ↓</th>
                   <th scope="col">δ₁ ↑</th>
-                  <th class="edge-cd-col" scope="col">Edge CD ↓</th>
+                  <th class="edge-cd-col" scope="col">Boundary CD ↓</th>
                 </tr>
               </thead>
               <tbody>
@@ -629,15 +631,12 @@
               </table>
             </div>
             <p class="table-note">
-              All reported values are averages. Rel and δ₁ measure global depth
-              accuracy, while Edge CD measures boundary sharpness. Edge CD is
+              Rel and δ₁ measure global depth accuracy, while Boundary CD
+              measures boundary sharpness. Boundary CD is
               reported in millimeters (mm). Latency is measured per image at
               518 × 518 on an RTX 5880 GPU and reported in milliseconds (ms).
             </p>
           </div>
-          <p class="quantitative-summary">
-            PXDepth preserves better local structure without sacrificing global accuracy, while running faster than existing structure-aware methods.
-          </p>
         </div>
       </section>
 
