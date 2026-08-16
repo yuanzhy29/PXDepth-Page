@@ -2,8 +2,6 @@
   "use strict";
 
   var ASSET_ROOT = "static/media/demo";
-  var PARSER_WORKER_URL =
-    "static/js/pointcloud-parser-worker.js?v=20260815-1";
   var DEFAULT_BASELINE = "MoGe2";
   var DEFAULT_SCENE_ID = "street_02";
   var DEFAULT_CAMERA = {
@@ -61,77 +59,78 @@
     );
   }
 
+  var PCBIN_MAGIC = [80, 67, 66, 78]; // "PCBN"
+  var PCBIN_VERSION = 1;
+  var PCBIN_STRIDE = 16;
+  var PCBIN_HEADER_BYTES = 32;
+  var PICK_SAMPLE_BUDGET = 250000;
+  var gpuUploadQueue = Promise.resolve();
+
   function createAbortError() {
-    var error = new Error("Point-cloud parsing was cancelled");
+    var error = new Error("Point-cloud loading was cancelled");
     error.name = "AbortError";
     return error;
   }
 
-  function parseBinaryPlyInWorker(arrayBuffer, signal) {
-    return new Promise(function (resolve, reject) {
-      if (!("Worker" in window)) {
-        reject(new Error("Web Workers are unavailable in this browser"));
-        return;
-      }
-      if (signal && signal.aborted) {
-        reject(createAbortError());
-        return;
-      }
+  function parsePcbin(arrayBuffer) {
+    if (!(arrayBuffer instanceof ArrayBuffer) || arrayBuffer.byteLength < PCBIN_HEADER_BYTES) {
+      throw new Error("Invalid PCBIN file");
+    }
 
-      var worker;
-      try {
-        worker = new Worker(PARSER_WORKER_URL);
-      } catch (error) {
-        reject(error);
-        return;
+    var bytes = new Uint8Array(arrayBuffer, 0, 4);
+    for (var index = 0; index < PCBIN_MAGIC.length; index += 1) {
+      if (bytes[index] !== PCBIN_MAGIC[index]) {
+        throw new Error("Invalid PCBIN magic");
       }
+    }
 
-      var settled = false;
+    var header = new DataView(arrayBuffer, 0, PCBIN_HEADER_BYTES);
+    var version = header.getUint32(4, true);
+    var pointCount = header.getUint32(8, true);
+    var stride = header.getUint32(12, true);
+    var dataOffset = header.getUint32(16, true);
 
-      function cleanup() {
-        if (signal) signal.removeEventListener("abort", handleAbort);
-        worker.terminate();
-      }
+    if (version !== PCBIN_VERSION) {
+      throw new Error("Unsupported PCBIN version: " + version);
+    }
+    if (!pointCount || stride !== PCBIN_STRIDE || dataOffset < PCBIN_HEADER_BYTES) {
+      throw new Error("Invalid PCBIN header");
+    }
 
-      function finish(callback, value) {
-        if (settled) return;
-        settled = true;
-        cleanup();
-        callback(value);
-      }
+    var expectedBytes = dataOffset + pointCount * stride;
+    if (expectedBytes > arrayBuffer.byteLength) {
+      throw new Error("PCBIN payload is incomplete");
+    }
+    if (dataOffset % 4 !== 0) {
+      throw new Error("PCBIN payload is not 4-byte aligned");
+    }
 
-      function handleAbort() {
-        finish(reject, createAbortError());
-      }
+    return {
+      buffer: arrayBuffer,
+      pointData: new Float32Array(arrayBuffer, dataOffset, pointCount * 4),
+      gpuBytes: new Uint8Array(arrayBuffer, dataOffset, pointCount * stride),
+      count: pointCount,
+    };
+  }
 
-      worker.addEventListener("message", function (event) {
-        var result = event.data || {};
-        if (result.error) {
-          finish(reject, new Error(result.error));
-          return;
-        }
-        finish(resolve, {
-          positions: new Float32Array(result.positions),
-          colors: new Uint8Array(result.colors),
-          count: result.count,
-        });
+  function waitForNextFrame() {
+    return new Promise(function (resolve) {
+      window.requestAnimationFrame(function () {
+        resolve();
       });
-
-      worker.addEventListener("error", function (event) {
-        finish(
-          reject,
-          new Error(event.message || "The point-cloud parser worker failed"),
-        );
-      });
-
-      if (signal) signal.addEventListener("abort", handleAbort, { once: true });
-
-      try {
-        worker.postMessage({ buffer: arrayBuffer }, [arrayBuffer]);
-      } catch (error) {
-        finish(reject, error);
-      }
     });
+  }
+
+  function enqueueGpuUpload(callback) {
+    var queued = gpuUploadQueue
+      .then(waitForNextFrame)
+      .then(callback);
+
+    gpuUploadQueue = queued.catch(function () {
+      // Keep the queue usable after a failed or aborted upload.
+    });
+
+    return queued;
   }
 
   function createShader(gl, type, source) {
@@ -261,39 +260,24 @@
   }
 
   async function fetchArrayBuffer(url, signal, onProgress) {
-    var response = await fetch(url, { signal: signal });
+    var response = await fetch(url, {
+      signal: signal,
+      credentials: "same-origin",
+    });
+
     if (!response.ok) {
       throw new Error("HTTP " + response.status + " while loading " + url);
     }
 
     var total = Number(response.headers.get("content-length")) || 0;
     onProgress(0, total);
-    if (!response.body || !response.body.getReader) {
-      var fallbackBuffer = await response.arrayBuffer();
-      onProgress(fallbackBuffer.byteLength, fallbackBuffer.byteLength);
-      return fallbackBuffer;
-    }
 
-    var reader = response.body.getReader();
-    var chunks = [];
-    var received = 0;
+    // Fast path: let the browser build the ArrayBuffer internally instead of
+    // repeatedly pushing network chunks into JS arrays and merging them.
+    var buffer = await response.arrayBuffer();
 
-    while (true) {
-      var readResult = await reader.read();
-      if (readResult.done) break;
-      chunks.push(readResult.value);
-      received += readResult.value.byteLength;
-      onProgress(received, total);
-    }
-
-    var merged = new Uint8Array(received);
-    var offset = 0;
-    chunks.forEach(function (chunk) {
-      merged.set(chunk, offset);
-      offset += chunk.byteLength;
-    });
-    onProgress(received, total || received);
-    return merged.buffer;
+    onProgress(buffer.byteLength, total || buffer.byteLength);
+    return buffer;
   }
 
   function PointCloudViewer(canvas, onCameraChange) {
@@ -317,7 +301,7 @@
     try {
       this.gl = canvas.getContext("webgl", {
         alpha: false,
-        antialias: true,
+        antialias: false,
         depth: true,
         powerPreference: "high-performance",
         preserveDrawingBuffer: false,
@@ -336,8 +320,7 @@
   PointCloudViewer.prototype.initializeGraphics = function () {
     var gl = this.gl;
     this.program = createProgram(gl);
-    this.positionBuffer = gl.createBuffer();
-    this.colorBuffer = gl.createBuffer();
+    this.pointBuffer = gl.createBuffer();
     this.locations = {
       position: gl.getAttribLocation(this.program, "aPosition"),
       color: gl.getAttribLocation(this.program, "aColor"),
@@ -377,7 +360,7 @@
 
   PointCloudViewer.prototype.resize = function () {
     if (!this.gl) return;
-    var pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+    var pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
     var width = Math.max(1, Math.round(this.canvas.clientWidth * pixelRatio));
     var height = Math.max(1, Math.round(this.canvas.clientHeight * pixelRatio));
 
@@ -596,7 +579,17 @@
     var bestDistanceSquared = maximumDistanceSquared;
     var bestDepth = Infinity;
 
-    for (var index = 0; index < this.pointCount * 3; index += 3) {
+    var pickStride = Math.max(
+      1,
+      Math.floor(this.pointCount / PICK_SAMPLE_BUDGET),
+    );
+
+    for (
+      var pointIndex = 0;
+      pointIndex < this.pointCount;
+      pointIndex += pickStride
+    ) {
+      var index = pointIndex * 4;
       var relativeX = this.positions[index] - frame.eye[0];
       var relativeY = this.positions[index + 1] - frame.eye[1];
       var relativeZ = this.positions[index + 2] - frame.eye[2];
@@ -709,19 +702,26 @@
       7.4 * densityScale * Math.min(window.devicePixelRatio || 1, 2),
     );
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
-    gl.enableVertexAttribArray(this.locations.position);
-    gl.vertexAttribPointer(this.locations.position, 3, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.pointBuffer);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer);
+    gl.enableVertexAttribArray(this.locations.position);
+    gl.vertexAttribPointer(
+      this.locations.position,
+      3,
+      gl.FLOAT,
+      false,
+      PCBIN_STRIDE,
+      0,
+    );
+
     gl.enableVertexAttribArray(this.locations.color);
     gl.vertexAttribPointer(
       this.locations.color,
       3,
       gl.UNSIGNED_BYTE,
       true,
-      0,
-      0,
+      PCBIN_STRIDE,
+      12,
     );
 
     gl.drawArrays(gl.POINTS, 0, this.pointCount);
@@ -731,11 +731,12 @@
     var gl = this.gl;
     if (!gl) return;
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, pointCloud.positions, gl.STATIC_DRAW);
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, pointCloud.colors, gl.STATIC_DRAW);
-    this.positions = pointCloud.positions;
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.pointBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, pointCloud.gpuBytes, gl.STATIC_DRAW);
+
+    // Keep a Float32 view of the same interleaved buffer for focus picking.
+    // Each point occupies 4 float slots: x, y, z, [packed RGBA bytes].
+    this.positions = pointCloud.pointData;
     this.pointCount = pointCloud.count;
     this.requestRender();
   };
@@ -777,7 +778,7 @@
 
     if (this.abortController) this.abortController.abort();
     this.abortController = new AbortController();
-    this.setState("loading", "Loading " + label, "0%");
+    this.setState("loading", "Loading " + label, "");
     this.setProgress(0, 0);
 
     try {
@@ -786,26 +787,33 @@
         this.abortController.signal,
         function (received, total) {
           if (sequence !== this.loadSequence) return;
-          var detail = total
-            ? Math.min(99, Math.round((received / total) * 100)) + "%"
-            : (received / (1024 * 1024)).toFixed(1) + " MB";
-          this.setProgress(received, total);
-          this.setState("loading", "Loading " + label, detail);
+
+          if (received === 0) {
+            this.setProgress(0, total);
+            this.setState("loading", "Loading " + label, "");
+            return;
+          }
+
+          this.setProgress(received, total || received);
+          this.setState("loading", "Preparing " + label, "100%");
         }.bind(this),
       );
 
       if (sequence !== this.loadSequence) return;
-      this.setProgress(1, 1);
-      this.setState("loading", "Preparing " + label, "100%");
-      await new Promise(function (resolve) {
-        window.requestAnimationFrame(resolve);
-      });
-      var pointCloud = await parseBinaryPlyInWorker(
-        buffer,
-        this.abortController.signal,
+
+      var pointCloud = parsePcbin(buffer);
+
+      await enqueueGpuUpload(
+        function () {
+          if (sequence !== this.loadSequence || this.abortController.signal.aborted) {
+            throw createAbortError();
+          }
+          this.setPointCloud(pointCloud);
+        }.bind(this),
       );
+
       if (sequence !== this.loadSequence) return;
-      this.setPointCloud(pointCloud);
+
       this.setState(
         "ready",
         label,
@@ -814,7 +822,11 @@
     } catch (error) {
       if (error.name === "AbortError" || sequence !== this.loadSequence) return;
       console.error(error);
-      this.setState("error", "Could not load " + label, "Select the scene again to retry");
+      this.setState(
+        "error",
+        "Could not load " + label,
+        "Run the offline asset converter, then select the scene again to retry",
+      );
     }
   };
 
@@ -851,6 +863,8 @@
       var button = document.createElement("button");
       var image = document.createElement("img");
       var imageUrl = ASSET_ROOT + "/" + scene.id + "/image.jpg";
+      var imageWebpUrl = ASSET_ROOT + "/" + scene.id + "/image.webp";
+      var thumbnailUrl = ASSET_ROOT + "/" + scene.id + "/image-thumb.webp";
 
       button.className = "scene-card";
       button.type = "button";
@@ -860,10 +874,18 @@
       button.setAttribute("aria-selected", isDefaultScene ? "true" : "false");
       if (isDefaultScene) button.classList.add("is-selected");
 
-      image.src = imageUrl;
+      image.src = thumbnailUrl;
       image.alt = "";
       image.loading = index < 5 ? "eager" : "lazy";
       image.decoding = "async";
+      image.addEventListener(
+        "error",
+        function () {
+          if (image.src.endsWith("/image.jpg")) return;
+          image.src = imageUrl;
+        },
+        { once: true },
+      );
       button.appendChild(image);
       strip.appendChild(button);
       buttons.push(button);
@@ -873,7 +895,11 @@
       });
       button.addEventListener("pointerenter", function (event) {
         if (event.pointerType && event.pointerType !== "mouse") return;
-        previewImage.src = imageUrl;
+        previewImage.onerror = function () {
+          previewImage.onerror = null;
+          previewImage.src = imageUrl;
+        };
+        previewImage.src = imageWebpUrl;
         previewImage.alt = scene.label + " input image preview";
         preview.classList.add("is-visible");
         preview.setAttribute("aria-hidden", "false");
@@ -1125,8 +1151,8 @@
       return method ? method.label : methodId;
     }
 
-    function plyUrl(scene, methodId) {
-      return ASSET_ROOT + "/" + scene.id + "/ply/" + methodId + ".ply";
+    function pointCloudUrl(scene, methodId) {
+      return ASSET_ROOT + "/" + scene.id + "/pcbin/" + methodId + ".pcbin";
     }
 
     function resetViews() {
@@ -1138,7 +1164,7 @@
     function loadBaseline() {
       var scene = SCENES[currentSceneIndex];
       var baselineId = selectedMethodId;
-      rightViewer.load(plyUrl(scene, baselineId), methodLabel(baselineId));
+      rightViewer.load(pointCloudUrl(scene, baselineId), methodLabel(baselineId));
     }
 
     function selectScene(scene, index) {
@@ -1147,7 +1173,7 @@
       sceneCounter.textContent = String(index + 1).padStart(2, "0") + " / " + SCENES.length;
       updateSelectedScene(index);
       resetViews();
-      leftViewer.load(plyUrl(scene, "Ours"), "PXDepth (Ours)");
+      leftViewer.load(pointCloudUrl(scene, "Ours"), "PXDepth (Ours)");
       loadBaseline();
     }
 
