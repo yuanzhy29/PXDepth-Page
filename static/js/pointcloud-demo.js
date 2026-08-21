@@ -3,7 +3,7 @@
 
   var ASSET_ROOT = "static/media/demo";
   var DEFAULT_BASELINE = "MoGe2";
-  var DEFAULT_SCENE_ID = "street_02";
+  var DEFAULT_SCENE_ID = "stair_01";
   var DEFAULT_CAMERA = {
     yaw: -0.52,
     pitch: -0.26,
@@ -60,9 +60,13 @@
   }
 
   var PCBIN_MAGIC = [80, 67, 66, 78]; // "PCBN"
-  var PCBIN_VERSION = 1;
-  var PCBIN_STRIDE = 16;
-  var PCBIN_HEADER_BYTES = 32;
+  var PCBIN_VERSION_V1 = 1;
+  var PCBIN_VERSION_V2 = 2;
+  var PCBIN_V1_STRIDE = 16;
+  var PCBIN_V2_STRIDE = 9;
+  var PCBIN_V1_HEADER_BYTES = 32;
+  var PCBIN_V2_HEADER_BYTES = 64;
+  var GPU_POINT_STRIDE = 16;
   var PICK_SAMPLE_BUDGET = 250000;
   var gpuUploadQueue = Promise.resolve();
 
@@ -73,7 +77,7 @@
   }
 
   function parsePcbin(arrayBuffer) {
-    if (!(arrayBuffer instanceof ArrayBuffer) || arrayBuffer.byteLength < PCBIN_HEADER_BYTES) {
+    if (!(arrayBuffer instanceof ArrayBuffer) || arrayBuffer.byteLength < PCBIN_V1_HEADER_BYTES) {
       throw new Error("Invalid PCBIN file");
     }
 
@@ -84,31 +88,82 @@
       }
     }
 
-    var header = new DataView(arrayBuffer, 0, PCBIN_HEADER_BYTES);
+    var header = new DataView(arrayBuffer);
     var version = header.getUint32(4, true);
     var pointCount = header.getUint32(8, true);
     var stride = header.getUint32(12, true);
     var dataOffset = header.getUint32(16, true);
 
-    if (version !== PCBIN_VERSION) {
-      throw new Error("Unsupported PCBIN version: " + version);
-    }
-    if (!pointCount || stride !== PCBIN_STRIDE || dataOffset < PCBIN_HEADER_BYTES) {
-      throw new Error("Invalid PCBIN header");
-    }
-
     var expectedBytes = dataOffset + pointCount * stride;
-    if (expectedBytes > arrayBuffer.byteLength) {
+    if (!pointCount || expectedBytes !== arrayBuffer.byteLength) {
       throw new Error("PCBIN payload is incomplete");
     }
-    if (dataOffset % 4 !== 0) {
-      throw new Error("PCBIN payload is not 4-byte aligned");
+
+    if (version === PCBIN_VERSION_V1) {
+      if (stride !== PCBIN_V1_STRIDE || dataOffset < PCBIN_V1_HEADER_BYTES) {
+        throw new Error("Invalid PCBIN v1 header");
+      }
+      if (dataOffset % 4 !== 0) {
+        throw new Error("PCBIN v1 payload is not 4-byte aligned");
+      }
+      return {
+        buffer: arrayBuffer,
+        pointData: new Float32Array(arrayBuffer, dataOffset, pointCount * 4),
+        gpuBytes: new Uint8Array(arrayBuffer, dataOffset, pointCount * stride),
+        count: pointCount,
+      };
+    }
+
+    if (
+      version !== PCBIN_VERSION_V2 ||
+      stride !== PCBIN_V2_STRIDE ||
+      dataOffset < PCBIN_V2_HEADER_BYTES
+    ) {
+      throw new Error("Unsupported PCBIN version or stride: " + version + "/" + stride);
+    }
+
+    var flags = header.getUint32(20, true);
+    if (!(flags & 1)) {
+      throw new Error("PCBIN v2 quantized-position flag is missing");
+    }
+    var minimum = [
+      header.getFloat32(24, true),
+      header.getFloat32(28, true),
+      header.getFloat32(32, true),
+    ];
+    var maximum = [
+      header.getFloat32(36, true),
+      header.getFloat32(40, true),
+      header.getFloat32(44, true),
+    ];
+    var scales = minimum.map(function (value, axis) {
+      return (maximum[axis] - value) / 65535;
+    });
+    var payload = new Uint8Array(arrayBuffer, dataOffset, pointCount * stride);
+    var gpuBuffer = new ArrayBuffer(pointCount * GPU_POINT_STRIDE);
+    var gpuFloats = new Float32Array(gpuBuffer);
+    var gpuBytes = new Uint8Array(gpuBuffer);
+
+    for (var pointIndex = 0; pointIndex < pointCount; pointIndex += 1) {
+      var sourceOffset = pointIndex * PCBIN_V2_STRIDE;
+      var floatOffset = pointIndex * 4;
+      var byteOffset = pointIndex * GPU_POINT_STRIDE;
+      var quantizedX = payload[sourceOffset] | (payload[sourceOffset + 1] << 8);
+      var quantizedY = payload[sourceOffset + 2] | (payload[sourceOffset + 3] << 8);
+      var quantizedZ = payload[sourceOffset + 4] | (payload[sourceOffset + 5] << 8);
+      gpuFloats[floatOffset] = minimum[0] + quantizedX * scales[0];
+      gpuFloats[floatOffset + 1] = minimum[1] + quantizedY * scales[1];
+      gpuFloats[floatOffset + 2] = minimum[2] + quantizedZ * scales[2];
+      gpuBytes[byteOffset + 12] = payload[sourceOffset + 6];
+      gpuBytes[byteOffset + 13] = payload[sourceOffset + 7];
+      gpuBytes[byteOffset + 14] = payload[sourceOffset + 8];
+      gpuBytes[byteOffset + 15] = 255;
     }
 
     return {
-      buffer: arrayBuffer,
-      pointData: new Float32Array(arrayBuffer, dataOffset, pointCount * 4),
-      gpuBytes: new Uint8Array(arrayBuffer, dataOffset, pointCount * stride),
+      buffer: gpuBuffer,
+      pointData: gpuFloats,
+      gpuBytes: gpuBytes,
       count: pointCount,
     };
   }
@@ -710,7 +765,7 @@
       3,
       gl.FLOAT,
       false,
-      PCBIN_STRIDE,
+      GPU_POINT_STRIDE,
       0,
     );
 
@@ -720,7 +775,7 @@
       3,
       gl.UNSIGNED_BYTE,
       true,
-      PCBIN_STRIDE,
+      GPU_POINT_STRIDE,
       12,
     );
 
